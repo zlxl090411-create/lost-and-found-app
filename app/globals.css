@@ -1,0 +1,188 @@
+:root {
+  /* 봉일천고등학교 로고 색상에 맞춘 팔레트 */
+  --blue: #1652e0;
+  --blue-dark: #0f3cad;
+  --red: #d81f1f;
+  --gold: #f2b90f;
+  --bg: #f4f6fc;
+  --card: #ffffff;
+  --text: #1c1f26;
+  --muted: #6b7280;
+  --danger: #d81f1f;
+  --success: #1f9d55;
+  --border: #e3e7f2;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Malgun Gothic", sans-serif;
+}
+
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 20px 16px 60px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: linear-gradient(90deg, var(--blue) 0%, var(--blue-dark) 100%);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  box-shadow: 0 2px 10px rgba(15, 60, 173, 0.25);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-brand img {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: white;
+  object-fit: contain;
+  padding: 1px;
+}
+
+.header h1 {
+  font-size: 17px;
+  margin: 0;
+  color: white;
+  line-height: 1.25;
+}
+.header .subtitle {
+  font-size: 11px;
+  color: #dbe4ff;
+}
+
+.header .links a {
+  margin-left: 12px;
+  font-size: 13px;
+  color: #dbe4ff;
+  text-decoration: none;
+}
+.header .links a:hover { color: var(--gold); }
+
+.hero-banner {
+  position: relative;
+  height: 130px;
+  overflow: hidden;
+}
+.hero-banner img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: brightness(0.65);
+}
+.hero-banner .hero-text {
+  position: absolute;
+  bottom: 12px;
+  left: 16px;
+  color: white;
+  font-size: 13px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+.notice-box {
+  background: #eaf0ff;
+  border: 1px solid #c9d8ff;
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin: 16px 0;
+}
+.notice-box h3 { margin: 0 0 6px; font-size: 15px; color: var(--blue-dark); }
+.notice-item { padding: 6px 0; border-top: 1px dashed #c9d8ff; }
+.notice-item:first-child { border-top: none; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.card img {
+  width: 100%;
+  height: 150px;
+  object-fit: cover;
+  background: #eee;
+}
+
+.card-body { padding: 12px 14px; flex: 1; display: flex; flex-direction: column; gap: 4px; }
+.card-title { font-weight: 600; font-size: 15px; }
+.card-meta { font-size: 12px; color: var(--muted); }
+.card-desc { font-size: 13px; color: #3a3f4a; margin-top: 4px; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.badge-warn { background: #fff6db; color: #a9800a; }
+.badge-danger { background: #fde3e1; color: var(--danger); }
+.badge-done { background: #e2f6e9; color: var(--success); }
+
+.btn {
+  display: inline-block;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--blue);
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+}
+.btn:hover { background: var(--blue-dark); }
+.btn-outline { background: white; border: 1px solid var(--border); color: var(--text); }
+.btn-danger { background: var(--danger); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+
+.form-group { margin-bottom: 12px; }
+.form-group label { display: block; font-size: 13px; margin-bottom: 4px; color: var(--muted); }
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.login-box {
+  max-width: 360px;
+  margin: 60px auto;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px;
+}
+.login-box h2 { margin-top: 0; font-size: 18px; }
+
+.error-text { color: var(--danger); font-size: 13px; margin-top: 8px; }
+.empty-text { color: var(--muted); font-size: 14px; padding: 30px 0; text-align: center; }
