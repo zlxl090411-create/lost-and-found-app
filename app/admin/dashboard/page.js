@@ -12,6 +12,8 @@ export default function AdminDashboard() {
   const [editingId, setEditingId] = useState(null);
   const [schoolInfo, setSchoolInfo] = useState('');
   const [message, setMessage] = useState('');
+  const [items, setItems] = useState([]);
+  const [teacherMap, setTeacherMap] = useState({});
 
   useEffect(() => {
     async function checkAuth() {
@@ -42,23 +44,42 @@ export default function AdminDashboard() {
       .channel('admin:school_info')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'school_info' }, () => loadData())
       .subscribe();
+    const itemsChannel = supabase
+      .channel('admin:lost_items')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'lost_items' }, () => loadData())
+      .subscribe();
 
     return () => {
       supabase.removeChannel(noticeChannel);
       supabase.removeChannel(infoChannel);
+      supabase.removeChannel(itemsChannel);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadData() {
-    const [{ data: noticeData, error: e1 }, { data: infoData, error: e2 }] = await Promise.all([
+    const [{ data: noticeData, error: e1 }, { data: infoData, error: e2 }, { data: itemData, error: e3 }] = await Promise.all([
       supabase.from('notices').select('*').order('created_at', { ascending: false }),
       supabase.from('school_info').select('*').eq('id', 1).single(),
+      supabase.from('lost_items').select('*').order('created_at', { ascending: false }),
     ]);
     if (e1) console.error('공지 불러오기 오류:', e1);
     if (e2) console.error('학교정보 불러오기 오류:', e2);
+    if (e3) console.error('분실물 불러오기 오류:', e3);
     setNotices(noticeData || []);
     setSchoolInfo(infoData?.content || '');
+    setItems(itemData || []);
+
+    const teacherIds = [...new Set((itemData || []).map((i) => i.created_by).filter(Boolean))];
+    if (teacherIds.length > 0) {
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .in('id', teacherIds);
+      const map = {};
+      (profilesData || []).forEach((p) => { map[p.id] = p.email; });
+      setTeacherMap(map);
+    }
   }
 
   async function handleNoticeSubmit(e) {
@@ -121,6 +142,15 @@ export default function AdminDashboard() {
   async function handleLogout() {
     await supabase.auth.signOut();
     router.push('/');
+  }
+
+  function formatDateTime(iso) {
+    if (!iso) return '-';
+    const d = new Date(iso);
+    return d.toLocaleString('ko-KR', {
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit',
+    });
   }
 
   if (checking) return <p className="empty-text">확인 중...</p>;
@@ -190,6 +220,40 @@ export default function AdminDashboard() {
           />
           <button className="btn" style={{ marginTop: 10 }} onClick={saveSchoolInfo}>저장</button>
           {message && <span style={{ marginLeft: 10, fontSize: 13, color: '#1f9d55' }}>{message}</span>}
+        </div>
+
+        <h2 style={{ fontSize: 16, marginTop: 28 }}>분실물 등록 현황</h2>
+        <div style={{ background: 'white', borderRadius: 12, border: '1px solid #e5e8ef', overflow: 'hidden' }}>
+          {items.length === 0 ? (
+            <p className="empty-text">등록된 분실물이 없습니다.</p>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+              <thead>
+                <tr style={{ background: '#f8f9fb', textAlign: 'left' }}>
+                  <th style={{ padding: '10px 12px' }}>제목</th>
+                  <th style={{ padding: '10px 12px' }}>등록한 선생님</th>
+                  <th style={{ padding: '10px 12px' }}>등록 시간</th>
+                  <th style={{ padding: '10px 12px' }}>상태</th>
+                </tr>
+              </thead>
+              <tbody>
+                {items.map((item) => (
+                  <tr key={item.id} style={{ borderTop: '1px solid #e5e8ef' }}>
+                    <td style={{ padding: '10px 12px' }}>{item.title}</td>
+                    <td style={{ padding: '10px 12px' }}>{teacherMap[item.created_by] || '알 수 없음'}</td>
+                    <td style={{ padding: '10px 12px' }}>{formatDateTime(item.created_at)}</td>
+                    <td style={{ padding: '10px 12px' }}>
+                      {item.status === 'claimed' ? (
+                        <span className="badge badge-done">주인 찾음</span>
+                      ) : (
+                        <span className="badge badge-warn">미해결</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </div>
