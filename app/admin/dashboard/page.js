@@ -51,10 +51,12 @@ export default function AdminDashboard() {
   }, []);
 
   async function loadData() {
-    const [{ data: noticeData }, { data: infoData }] = await Promise.all([
+    const [{ data: noticeData, error: e1 }, { data: infoData, error: e2 }] = await Promise.all([
       supabase.from('notices').select('*').order('created_at', { ascending: false }),
       supabase.from('school_info').select('*').eq('id', 1).single(),
     ]);
+    if (e1) console.error('공지 불러오기 오류:', e1);
+    if (e2) console.error('학교정보 불러오기 오류:', e2);
     setNotices(noticeData || []);
     setSchoolInfo(infoData?.content || '');
   }
@@ -63,20 +65,28 @@ export default function AdminDashboard() {
     e.preventDefault();
     const { data: { session } } = await supabase.auth.getSession();
 
+    let result;
     if (editingId) {
-      await supabase
+      result = await supabase
         .from('notices')
         .update({ title: noticeForm.title, content: noticeForm.content, updated_at: new Date().toISOString() })
         .eq('id', editingId);
       setEditingId(null);
     } else {
-      await supabase.from('notices').insert({
+      result = await supabase.from('notices').insert({
         title: noticeForm.title,
         content: noticeForm.content,
         created_by: session.user.id,
       });
     }
+
+    if (result.error) {
+      alert('공지사항 저장 실패: ' + result.error.message);
+      return;
+    }
+
     setNoticeForm({ title: '', content: '' });
+    loadData();
   }
 
   function startEdit(notice) {
@@ -86,13 +96,26 @@ export default function AdminDashboard() {
 
   async function deleteNotice(id) {
     if (!confirm('이 공지사항을 삭제할까요?')) return;
-    await supabase.from('notices').delete().eq('id', id);
+    const { error } = await supabase.from('notices').delete().eq('id', id);
+    if (error) {
+      alert('삭제 실패: ' + error.message);
+      return;
+    }
+    loadData();
   }
 
   async function saveSchoolInfo() {
-    await supabase.from('school_info').update({ content: schoolInfo, updated_at: new Date().toISOString() }).eq('id', 1);
+    const { error } = await supabase
+      .from('school_info')
+      .update({ content: schoolInfo, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+    if (error) {
+      alert('학교 정보 저장 실패: ' + error.message);
+      return;
+    }
     setMessage('학교 정보가 저장되었습니다.');
     setTimeout(() => setMessage(''), 2000);
+    loadData();
   }
 
   async function handleLogout() {
