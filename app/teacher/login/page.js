@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../../lib/supabaseClient';
 
 export default function TeacherLoginPage() {
   const [email, setEmail] = useState('');
@@ -46,41 +46,40 @@ export default function TeacherLoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-md" style={{ margin: '80px auto', maxWidth: 400 }}>
-        <h1 className="mb-6 text-center text-2xl font-bold text-gray-800" style={{ marginBottom: 20, textAlign: 'center' }}>선생님 로그인</h1>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#f9fafb', padding: 16 }}>
+      <div style={{ width: '100%', maxWidth: 400, backgroundColor: 'white', padding: 24, borderRadius: 8, boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)' }}>
+        <h1 style={{ marginBottom: 24, textAlign: 'center', fontSize: 20, fontWeight: 'bold', color: '#1f2937' }}>선생님 로그인</h1>
         {errorMsg && (
-          <div style={{ padding: 10, marginBottom: 15, background: '#fee2e2', color: '#dc2626', borderRadius: 6, fontSize: 14 }}>
+          <div style={{ padding: 10, marginBottom: 16, backgroundColor: '#fee2e2', color: '#dc2626', borderRadius: 6, fontSize: 14 }}>
             {errorMsg}
           </div>
         )}
-        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
-            <label style={{ display: 'block', fontSize: 14, marginBottom: 5 }}>이메일</label>
+            <label style={{ display: 'block', fontSize: 14, marginBottom: 4, color: '#374151' }}>이메일</label>
             <input
               type="email"
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="bongil2026@gmail.com"
-              style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', boxSizing: 'border-box' }}
             />
           </div>
           <div>
-            <label style={{ display: 'block', fontSize: 14, marginBottom: 5 }}>비밀번호</label>
+            <label style={{ display: 'block', fontSize: 14, marginBottom: 4, color: '#374151' }}>비밀번호</label>
             <input
               type="password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              style={{ width: '100%', padding: 10, borderRadius: 6, border: '1px solid #ccc', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', boxSizing: 'border-box' }}
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="btn"
-            style={{ width: '100%', padding: 12, marginTop: 10, cursor: 'pointer' }}
+            style={{ width: '100%', padding: '10px 0', backgroundColor: '#2563eb', color: 'white', borderRadius: 6, border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
           >
             {loading ? '로그인 중...' : '로그인'}
           </button>
