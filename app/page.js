@@ -5,9 +5,10 @@ import { supabase } from '../lib/supabaseClient';
 
 const DISPOSAL_DAYS = 90;
 
-function getDday(foundDate) {
-  const found = new Date(foundDate);
-  const deadline = new Date(found);
+function getDday(createdAt) {
+  if (!createdAt) return 0;
+  const created = new Date(createdAt);
+  const deadline = new Date(created);
   deadline.setDate(deadline.getDate() + DISPOSAL_DAYS);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -16,21 +17,24 @@ function getDday(foundDate) {
   return diffDays;
 }
 
-function DdayBadge({ status, foundDate }) {
+function DdayBadge({ status, createdAt }) {
   if (status === 'claimed') {
     return <span className="badge badge-done">주인 찾음</span>;
   }
-  const dday = getDday(foundDate);
+  const dday = getDday(createdAt);
   if (dday < 0) {
     return <span className="badge badge-danger">폐기 대상</span>;
   }
   if (dday <= 7) {
     return <span className="badge badge-danger">D-{dday} (폐기 임박)</span>;
   }
-  if (dday <= 21) {
-    return <span className="badge badge-warn">D-{dday}</span>;
-  }
   return <span className="badge badge-warn">D-{dday}</span>;
+}
+
+function formatDate(dateString) {
+  if (!dateString) return '';
+  const d = new Date(dateString);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 export default function StudentPage() {
@@ -38,7 +42,7 @@ export default function StudentPage() {
   const [notices, setNotices] = useState([]);
   const [schoolInfo, setSchoolInfo] = useState('');
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(''); // 검색어 상태 추가
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -80,7 +84,6 @@ export default function StudentPage() {
     };
   }, []);
 
-  // 제목, 장소, 설명 필드 필터링
   const filteredItems = items.filter((item) => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
@@ -132,8 +135,6 @@ export default function StudentPage() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, flexWrap: 'wrap', gap: 12 }}>
           <h2 style={{ fontSize: 16, margin: 0 }}>습득된 분실물 목록</h2>
-          
-          {/* 검색창 영역 */}
           <input
             type="text"
             placeholder="제목, 장소, 설명으로 검색..."
@@ -165,11 +166,11 @@ export default function StudentPage() {
                 <div className="card-body">
                   <div className="card-title">{item.title}</div>
                   <div className="card-meta">
-                    📍 {item.location} · 습득일 {item.found_date}
+                    📍 {item.location} · 등록일 {formatDate(item.created_at)}
                   </div>
                   {item.description && <div className="card-desc">{item.description}</div>}
                   <div style={{ marginTop: 6 }}>
-                    <DdayBadge status={item.status} foundDate={item.found_date} />
+                    <DdayBadge status={item.status} createdAt={item.created_at} />
                   </div>
                 </div>
               </div>
