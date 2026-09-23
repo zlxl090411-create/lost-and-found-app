@@ -38,6 +38,7 @@ export default function StudentPage() {
   const [notices, setNotices] = useState([]);
   const [schoolInfo, setSchoolInfo] = useState('');
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(''); // 검색어 상태 추가
 
   useEffect(() => {
     let mounted = true;
@@ -56,7 +57,6 @@ export default function StudentPage() {
     }
     load();
 
-    // 실시간 구독: 다른 사용자가 등록/수정/삭제하면 새로고침 없이 즉시 반영됨
     const itemsChannel = supabase
       .channel('public:lost_items')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'lost_items' }, () => load())
@@ -80,6 +80,16 @@ export default function StudentPage() {
     };
   }, []);
 
+  // 제목, 장소, 설명 필드 필터링
+  const filteredItems = items.filter((item) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+    const titleMatch = item.title?.toLowerCase().includes(query);
+    const locationMatch = item.location?.toLowerCase().includes(query);
+    const descMatch = item.description?.toLowerCase().includes(query);
+    return titleMatch || locationMatch || descMatch;
+  });
+
   return (
     <div>
       <div className="header">
@@ -92,7 +102,6 @@ export default function StudentPage() {
         </div>
         <div className="links">
           <a href="/teacher/login">선생님 로그인</a>
-          <a href="/admin/login">관리자 로그인</a>
         </div>
       </div>
 
@@ -121,15 +130,36 @@ export default function StudentPage() {
           </div>
         )}
 
-        <h2 style={{ fontSize: 16, marginTop: 24 }}>습득된 분실물 목록</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 24, flexWrap: 'wrap', gap: 12 }}>
+          <h2 style={{ fontSize: 16, margin: 0 }}>습득된 분실물 목록</h2>
+          
+          {/* 검색창 영역 */}
+          <input
+            type="text"
+            placeholder="제목, 장소, 설명으로 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              padding: '8px 14px',
+              fontSize: '14px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              width: '100%',
+              maxWidth: '260px',
+              outline: 'none'
+            }}
+          />
+        </div>
 
         {loading ? (
           <p className="empty-text">불러오는 중...</p>
-        ) : items.length === 0 ? (
-          <p className="empty-text">등록된 분실물이 없습니다.</p>
+        ) : filteredItems.length === 0 ? (
+          <p className="empty-text">
+            {searchQuery ? '검색 결과에 해당하는 분실물이 없습니다.' : '등록된 분실물이 없습니다.'}
+          </p>
         ) : (
           <div className="grid">
-            {items.map((item) => (
+            {filteredItems.map((item) => (
               <div className="card" key={item.id}>
                 {item.photo_url && <img src={item.photo_url} alt={item.title} />}
                 <div className="card-body">
