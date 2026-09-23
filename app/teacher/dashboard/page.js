@@ -8,10 +8,11 @@ export default function TeacherDashboard() {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
   const [items, setItems] = useState([]);
-  const [form, setForm] = useState({ title: '', description: '', location: '', found_date: '' });
+  const [form, setForm] = useState({ title: '', description: '', location: '' });
   const [photoFile, setPhotoFile] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     async function checkAuth() {
@@ -25,7 +26,9 @@ export default function TeacherDashboard() {
         .select('role')
         .eq('id', session.user.id)
         .single();
-      if (!profile || profile.role !== 'teacher') {
+        
+      // teacher 또는 admin 권한 모두 선생님 대시보드 접근 허용
+      if (!profile || (profile.role !== 'teacher' && profile.role !== 'admin')) {
         router.push('/teacher/login');
         return;
       }
@@ -70,11 +73,14 @@ export default function TeacherDashboard() {
 
     const { data: { session } } = await supabase.auth.getSession();
 
+    // today ISO 날짜 생성 (YYYY-MM-DD)
+    const todayStr = new Date().toISOString().split('T')[0];
+
     const { error: insertError } = await supabase.from('lost_items').insert({
       title: form.title,
       description: form.description,
       location: form.location,
-      found_date: form.found_date,
+      found_date: todayStr, // 오늘 날짜 자동 등록
       photo_url,
       created_by: session.user.id,
     });
@@ -83,7 +89,7 @@ export default function TeacherDashboard() {
       setMessage('등록 실패: ' + insertError.message);
     } else {
       setMessage('등록되었습니다.');
-      setForm({ title: '', description: '', location: '', found_date: '' });
+      setForm({ title: '', description: '', location: '' });
       setPhotoFile(null);
     }
     setSubmitting(false);
@@ -102,6 +108,22 @@ export default function TeacherDashboard() {
     await supabase.auth.signOut();
     router.push('/');
   }
+
+  function formatDate(dateString) {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  // 실시간 목록 검색 필터링
+  const filteredItems = items.filter((item) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+    const titleMatch = item.title?.toLowerCase().includes(query);
+    const locationMatch = item.location?.toLowerCase().includes(query);
+    const descMatch = item.description?.toLowerCase().includes(query);
+    return titleMatch || locationMatch || descMatch;
+  });
 
   if (checking) return <p className="empty-text">확인 중...</p>;
 
@@ -135,10 +157,6 @@ export default function TeacherDashboard() {
             <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} required />
           </div>
           <div className="form-group">
-            <label>습득 날짜</label>
-            <input type="date" value={form.found_date} onChange={(e) => setForm({ ...form, found_date: e.target.value })} required />
-          </div>
-          <div className="form-group">
             <label>설명</label>
             <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
@@ -152,35 +170,59 @@ export default function TeacherDashboard() {
           {message && <p style={{ fontSize: 13, marginTop: 8 }}>{message}</p>}
         </form>
 
-        <h2 style={{ fontSize: 16, marginTop: 28 }}>등록한 분실물 목록</h2>
-        <div className="grid">
-          {items.map((item) => (
-            <div className="card" key={item.id}>
-              {item.photo_url && <img src={item.photo_url} alt={item.title} />}
-              <div className="card-body">
-                <div className="card-title">{item.title}</div>
-                <div className="card-meta">📍 {item.location} · {item.found_date}</div>
-                <div style={{ marginTop: 6 }}>
-                  {item.status === 'claimed' ? (
-                    <span className="badge badge-done">주인 찾음</span>
-                  ) : (
-                    <span className="badge badge-warn">미해결</span>
-                  )}
-                </div>
-                <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
-                  {item.status !== 'claimed' && (
-                    <button className="btn btn-sm" onClick={() => markAsFound(item.id)}>
-                      찾았어요 표시
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 28, flexWrap: 'wrap', gap: 12 }}>
+          <h2 style={{ fontSize: 16, margin: 0 }}>등록한 분실물 목록</h2>
+          <input
+            type="text"
+            placeholder="제목, 장소, 설명으로 검색..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{
+              padding: '8px 14px',
+              fontSize: '14px',
+              borderRadius: '6px',
+              border: '1px solid #ccc',
+              width: '100%',
+              maxWidth: '260px',
+              outline: 'none'
+            }}
+          />
+        </div>
+
+        {filteredItems.length === 0 ? (
+          <p className="empty-text" style={{ marginTop: 16 }}>
+            {searchQuery ? '검색 결과에 해당하는 분실물이 없습니다.' : '등록된 분실물이 없습니다.'}
+          </p>
+        ) : (
+          <div className="grid" style={{ marginTop: 16 }}>
+            {filteredItems.map((item) => (
+              <div className="card" key={item.id}>
+                {item.photo_url && <img src={item.photo_url} alt={item.title} />}
+                <div className="card-body">
+                  <div className="card-title">{item.title}</div>
+                  <div className="card-meta">📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}</div>
+                  <div style={{ marginTop: 6 }}>
+                    {item.status === 'claimed' ? (
+                      <span className="badge badge-done">주인 찾음</span>
+                    ) : (
+                      <span className="badge badge-warn">미해결</span>
+                    )}
+                  </div>
+                  <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
+                    {item.status !== 'claimed' && (
+                      <button className="btn btn-sm" onClick={() => markAsFound(item.id)}>
+                        찾았어요 표시
+                      </button>
+                    )}
+                    <button className="btn btn-outline btn-sm" onClick={() => deleteItem(item.id)}>
+                      삭제
                     </button>
-                  )}
-                  <button className="btn btn-outline btn-sm" onClick={() => deleteItem(item.id)}>
-                    삭제
-                  </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
