@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '../../../lib/supabaseClient';
 
 export default function TeacherDashboard() {
   const router = useRouter();
@@ -41,7 +41,10 @@ export default function TeacherDashboard() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'lost_items' }, () => loadItems())
       .subscribe();
 
-    return () => supabase.removeChannel(channel);
+    return () => {
+      supabase.removeChannel(channel);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadItems() {
