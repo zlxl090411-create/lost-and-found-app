@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function TeacherDashboard() {
   const router = useRouter();
@@ -27,7 +27,6 @@ export default function TeacherDashboard() {
         .eq('id', session.user.id)
         .single();
         
-      // teacher 또는 admin 권한 모두 선생님 대시보드 접근 허용
       if (!profile || (profile.role !== 'teacher' && profile.role !== 'admin')) {
         router.push('/teacher/login');
         return;
@@ -43,7 +42,6 @@ export default function TeacherDashboard() {
       .subscribe();
 
     return () => supabase.removeChannel(channel);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function loadItems() {
@@ -72,15 +70,13 @@ export default function TeacherDashboard() {
     }
 
     const { data: { session } } = await supabase.auth.getSession();
-
-    // today ISO 날짜 생성 (YYYY-MM-DD)
     const todayStr = new Date().toISOString().split('T')[0];
 
     const { error: insertError } = await supabase.from('lost_items').insert({
       title: form.title,
       description: form.description,
       location: form.location,
-      found_date: todayStr, // 오늘 날짜 자동 등록
+      found_date: todayStr,
       photo_url,
       created_by: session.user.id,
     });
@@ -115,7 +111,6 @@ export default function TeacherDashboard() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  // 실시간 목록 검색 필터링
   const filteredItems = items.filter((item) => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return true;
