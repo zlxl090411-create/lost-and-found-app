@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const DISPOSAL_DAYS = 90;
 
@@ -13,8 +13,7 @@ function getDday(createdAt) {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   deadline.setHours(0, 0, 0, 0);
-  const diffDays = Math.round((deadline - today) / (1000 * 60 * 60 * 24));
-  return diffDays;
+  return Math.round((deadline - today) / (1000 * 60 * 60 * 24));
 }
 
 function DdayBadge({ status, createdAt }) {
@@ -166,11 +165,11 @@ export default function StudentPage() {
                 <div className="card-body">
                   <div className="card-title">{item.title}</div>
                   <div className="card-meta">
-                    📍 {item.location} · 등록일 {formatDate(item.created_at)}
+                    📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}
                   </div>
                   {item.description && <div className="card-desc">{item.description}</div>}
                   <div style={{ marginTop: 6 }}>
-                    <DdayBadge status={item.status} createdAt={item.created_at} />
+                    <DdayBadge status={item.status} createdAt={item.created_at || item.found_date} />
                   </div>
                 </div>
               </div>
