@@ -44,8 +44,7 @@ export default function TeacherDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router]);
 
   async function loadItems() {
     const { data } = await supabase.from('lost_items').select('*').order('created_at', { ascending: false });
