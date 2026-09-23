@@ -1,69 +1,94 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabaseClient';
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
 
-export default function TeacherLogin() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const router = useRouter();
+export default function TeacherLoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [loading, setLoading] = useState(false)
+  const router = useRouter()
+  const supabase = createClientComponentClient()
 
-  async function handleLogin(e) {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    setErrorMsg('')
 
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-    if (signInError) {
-      setError('이메일 또는 비밀번호가 올바르지 않습니다.');
-      setLoading(false);
-      return;
+    // Supabase 로그인 시도
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (authError) {
+      setErrorMsg('이메일 또는 비밀번호가 올바르지 않습니다.')
+      setLoading(false)
+      return
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', data.user.id)
-      .single();
+    if (authData.user) {
+      // profiles 테이블에서 역할(role) 확인
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', authData.user.id)
+        .single()
 
-    if (!profile || profile.role !== 'teacher') {
-      setError('선생님 계정 권한이 없습니다. 관리자에게 문의하세요.');
-      await supabase.auth.signOut();
-      setLoading(false);
-      return;
+      // role이 teacher 또는 admin 둘 중 하나면 선생님 대시보드로 이동 허용
+      if (profile && (profile.role === 'teacher' || profile.role === 'admin')) {
+        router.push('/teacher/dashboard')
+        router.refresh()
+      } else {
+        await supabase.auth.signOut()
+        setErrorMsg('선생님/관리자 권한이 있는 계정이 아닙니다.')
+      }
     }
-
-    router.push('/teacher/dashboard');
+    setLoading(false)
   }
 
   return (
-    <div className="container">
-      <div className="login-box">
-        <div style={{ textAlign: 'center', marginBottom: 10 }}>
-          <img src="/school-logo.png" alt="봉일천고등학교 로고" style={{ width: 56, height: 56 }} />
-        </div>
-        <h2 style={{ textAlign: 'center' }}>선생님 로그인</h2>
-        <form onSubmit={handleLogin}>
-          <div className="form-group">
-            <label>이메일</label>
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md rounded-lg bg-white p-6 shadow-md">
+        <h1 className="mb-6 text-center text-2xl font-bold text-gray-800">선생님 로그인</h1>
+        {errorMsg && (
+          <div className="mb-4 rounded bg-red-100 p-3 text-sm text-red-600">
+            {errorMsg}
           </div>
-          <div className="form-group">
-            <label>비밀번호</label>
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        )}
+        <form onSubmit={handleLogin} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">이메일</label>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="mt-1 w-full rounded-md border border-gray-300 p-2 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="bongil2026@gmail.com"
+            />
           </div>
-          <button className="btn" type="submit" disabled={loading} style={{ width: '100%' }}>
+          <div>
+            <label className="block text-sm font-medium text-gray-700">비밀번호</label>
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="mt-1 w-full rounded-md border border-gray-300 p-2 text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full rounded-md bg-blue-600 py-2.5 font-semibold text-white hover:bg-blue-700 transition"
+          >
             {loading ? '로그인 중...' : '로그인'}
           </button>
-          {error && <p className="error-text">{error}</p>}
         </form>
-        <p style={{ marginTop: 16 }}>
-          <a href="/" style={{ fontSize: 13, color: '#6b7280' }}>← 학생 화면으로 돌아가기</a>
-        </p>
       </div>
     </div>
-  );
+  )
 }
