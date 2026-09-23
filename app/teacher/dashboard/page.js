@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '../../../lib/supabaseClient';
 
@@ -13,6 +13,14 @@ export default function TeacherDashboard() {
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
+
+  const loadItems = useCallback(async () => {
+    const { data } = await supabase
+      .from('lost_items')
+      .select('*')
+      .order('created_at', { ascending: false });
+    setItems(data || []);
+  }, []);
 
   useEffect(() => {
     async function checkAuth() {
@@ -44,12 +52,7 @@ export default function TeacherDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [router]);
-
-  async function loadItems() {
-    const { data } = await supabase.from('lost_items').select('*').order('created_at', { ascending: false });
-    setItems(data || []);
-  }
+  }, [router, loadItems]);
 
   async function handleSubmit(e) {
     e.preventDefault();
