@@ -293,11 +293,10 @@ export default function TeacherDashboard() {
           </div>
         )}
 
-        {/* 학교 정보 및 공지사항 관리 섹션 (맨 아래 배치) */}
+        {/* 학교 정보 및 공지사항 관리 섹션 */}
         <div style={{ marginTop: '40px', borderTop: '2px solid #e5e8ef', paddingTop: '24px' }}>
           <h2 style={{ fontSize: 18, marginBottom: '16px' }}>⚙️ 학교 정보 및 공지사항 관리</h2>
 
-          {/* 학교 정보 수정 */}
           <div style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e5e8ef', marginBottom: '20px' }}>
             <h3 style={{ fontSize: 15, marginBottom: '12px' }}>학교 정보 수정</h3>
             <form onSubmit={handleUpdateSchoolInfo}>
@@ -324,8 +323,7 @@ export default function TeacherDashboard() {
             </form>
           </div>
 
-          {/* 공지사항 수정 */}
-          <div style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e5e8ef' }}>
+          <div style={{ background: 'white', persding: 16, borderRadius: 12, border: '1px solid #e5e8ef' }}>
             <h3 style={{ fontSize: 15, marginBottom: '12px' }}>공지사항 수정</h3>
             <form onSubmit={handleUpdateNotice}>
               <div className="form-group">
