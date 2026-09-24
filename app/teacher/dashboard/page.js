@@ -61,7 +61,8 @@ export default function TeacherDashboard() {
 
     let photo_url = null;
     if (photoFile) {
-      const fileName = `${Date.now()}_${photoFile.name}`;
+      const safeName = photoFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
+const fileName = `${Date.now()}_${safeName}`;
       const { error: uploadError } = await supabase.storage
         .from('lost-item-photos')
         .upload(fileName, photoFile);
