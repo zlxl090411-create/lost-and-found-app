@@ -323,7 +323,7 @@ export default function TeacherDashboard() {
             </form>
           </div>
 
-          <div style={{ background: 'white', persding: 16, borderRadius: 12, border: '1px solid #e5e8ef' }}>
+          <div style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e5e8ef' }}>
             <h3 style={{ fontSize: 15, marginBottom: '12px' }}>공지사항 수정</h3>
             <form onSubmit={handleUpdateNotice}>
               <div className="form-group">
