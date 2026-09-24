@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function TeacherDashboard() {
   const router = useRouter();
@@ -14,17 +14,36 @@ export default function TeacherDashboard() {
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const loadItems = useCallback(async () => {
+  // 학교 정보 및 공지사항 상태
+  const [schoolInfo, setSchoolInfo] = useState({ id: null, info_text: '', contact: '' });
+  const [notice, setNotice] = useState({ id: null, content: '' });
+  const [infoMessage, setInfoMessage] = useState('');
+  const [noticeMessage, setNoticeMessage] = useState('');
+
+  const loadItems = async () => {
     const { data } = await supabase
       .from('lost_items')
       .select('*')
       .order('created_at', { ascending: false });
     setItems(data || []);
-  }, []);
+  };
+
+  const loadSchoolAndNotice = async () => {
+    const { data: schoolData } = await supabase.from('school_info').select('*').limit(1).maybeSingle();
+    if (schoolData) {
+      setSchoolInfo(schoolData);
+    }
+
+    const { data: noticeData } = await supabase.from('notices').select('*').limit(1).maybeSingle();
+    if (noticeData) {
+      setNotice(noticeData);
+    }
+  };
 
   useEffect(() => {
     async function checkAuth() {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: authData } = await supabase.auth.getSession();
+      const session = authData?.session;
       if (!session) {
         router.push('/teacher/login');
         return;
@@ -33,7 +52,7 @@ export default function TeacherDashboard() {
         .from('profiles')
         .select('role')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
         
       if (!profile || (profile.role !== 'teacher' && profile.role !== 'admin')) {
         router.push('/teacher/login');
@@ -41,6 +60,7 @@ export default function TeacherDashboard() {
       }
       setChecking(false);
       loadItems();
+      loadSchoolAndNotice();
     }
     checkAuth();
 
@@ -52,7 +72,7 @@ export default function TeacherDashboard() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [router, loadItems]);
+  }, [router]);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -61,8 +81,7 @@ export default function TeacherDashboard() {
 
     let photo_url = null;
     if (photoFile) {
-      const safeName = photoFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
-const fileName = `${Date.now()}_${safeName}`;
+      const fileName = `${Date.now()}_${photoFile.name}`;
       const { error: uploadError } = await supabase.storage
         .from('lost-item-photos')
         .upload(fileName, photoFile);
@@ -75,7 +94,8 @@ const fileName = `${Date.now()}_${safeName}`;
       photo_url = urlData.publicUrl;
     }
 
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: authData } = await supabase.auth.getSession();
+    const session = authData?.session;
     const todayStr = new Date().toISOString().split('T')[0];
 
     const { error: insertError } = await supabase.from('lost_items').insert({
@@ -84,7 +104,7 @@ const fileName = `${Date.now()}_${safeName}`;
       location: form.location,
       found_date: todayStr,
       photo_url,
-      created_by: session.user.id,
+      created_by: session?.user?.id,
     });
 
     if (insertError) {
@@ -104,6 +124,52 @@ const fileName = `${Date.now()}_${safeName}`;
   async function deleteItem(id) {
     if (!confirm('이 분실물을 삭제할까요?')) return;
     await supabase.from('lost_items').delete().eq('id', id);
+  }
+
+  async function handleUpdateSchoolInfo(e) {
+    e.preventDefault();
+    if (schoolInfo.id) {
+      const { error } = await supabase
+        .from('school_info')
+        .update({ info_text: schoolInfo.info_text, contact: schoolInfo.contact })
+        .eq('id', schoolInfo.id);
+      if (error) setInfoMessage('학교 정보 수정 실패: ' + error.message);
+      else setInfoMessage('학교 정보가 수정되었습니다.');
+    } else {
+      const { data, error } = await supabase
+        .from('school_info')
+        .insert({ info_text: schoolInfo.info_text, contact: schoolInfo.contact })
+        .select()
+        .maybeSingle();
+      if (error) setInfoMessage('학교 정보 저장 실패: ' + error.message);
+      else if (data) {
+        setSchoolInfo(data);
+        setInfoMessage('학교 정보가 저장되었습니다.');
+      }
+    }
+  }
+
+  async function handleUpdateNotice(e) {
+    e.preventDefault();
+    if (notice.id) {
+      const { error } = await supabase
+        .from('notices')
+        .update({ content: notice.content })
+        .eq('id', notice.id);
+      if (error) setNoticeMessage('공지사항 수정 실패: ' + error.message);
+      else setNoticeMessage('공지사항이 수정되었습니다.');
+    } else {
+      const { data, error } = await supabase
+        .from('notices')
+        .insert({ content: notice.content })
+        .select()
+        .maybeSingle();
+      if (error) setNoticeMessage('공지사항 저장 실패: ' + error.message);
+      else if (data) {
+        setNotice(data);
+        setNoticeMessage('공지사항이 등록되었습니다.');
+      }
+    }
   }
 
   async function handleLogout() {
@@ -134,7 +200,7 @@ const fileName = `${Date.now()}_${safeName}`;
         <div className="header-brand">
           <img src="/school-logo.png" alt="봉일천고등학교 로고" />
           <div>
-            <h1>선생님 화면</h1>
+            <h1>선생님 / 관리자 화면</h1>
             <div className="subtitle">봉일천고등학교 분실물 게시판</div>
           </div>
         </div>
@@ -224,6 +290,55 @@ const fileName = `${Date.now()}_${safeName}`;
             ))}
           </div>
         )}
+
+        {/* 학교 정보 및 공지사항 관리 섹션 */}
+        <div style={{ marginTop: '40px', borderTop: '2px solid #e5e8ef', paddingTop: '24px' }}>
+          <h2 style={{ fontSize: 18, marginBottom: '16px' }}>⚙️ 학교 정보 및 공지사항 관리</h2>
+
+          <div style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e5e8ef', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: 15, marginBottom: '12px' }}>학교 정보 수정</h3>
+            <form onSubmit={handleUpdateSchoolInfo}>
+              <div className="form-group">
+                <label>위치 및 안내 텍스트</label>
+                <input 
+                  type="text" 
+                  value={schoolInfo.info_text || ''} 
+                  onChange={(e) => setSchoolInfo({ ...schoolInfo, info_text: e.target.value })} 
+                  placeholder="예: 행정실(1층) 등"
+                />
+              </div>
+              <div className="form-group">
+                <label>연락처 및 운영 시간</label>
+                <input 
+                  type="text" 
+                  value={schoolInfo.contact || ''} 
+                  onChange={(e) => setSchoolInfo({ ...schoolInfo, contact: e.target.value })} 
+                  placeholder="예: 행정실 031-945-0857 (평일 9:00-17:00)"
+                />
+              </div>
+              <button className="btn btn-sm" type="submit">학교 정보 저장</button>
+              {infoMessage && <p style={{ fontSize: 13, marginTop: 8, color: '#2563eb' }}>{infoMessage}</p>}
+            </form>
+          </div>
+
+          <div style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e5e8ef' }}>
+            <h3 style={{ fontSize: 15, marginBottom: '12px' }}>공지사항 수정</h3>
+            <form onSubmit={handleUpdateNotice}>
+              <div className="form-group">
+                <label>공지사항 내용</label>
+                <textarea 
+                  rows={3} 
+                  value={notice.content || ''} 
+                  onChange={(e) => setNotice({ ...notice, content: e.target.value })} 
+                  placeholder="학생들에게 공지할 내용을 입력하세요."
+                />
+              </div>
+              <button className="btn btn-sm" type="submit">공지사항 저장</button>
+              {noticeMessage && <p style={{ fontSize: 13, marginTop: 8, color: '#2563eb' }}>{noticeMessage}</p>}
+            </form>
+          </div>
+        </div>
+
       </div>
     </div>
   );
