@@ -62,7 +62,7 @@ export default function TeacherLoginPage() {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="bongil2026@gmail.com"
+              placeholder="이메일을 입력하세요"
               style={{ width: '100%', padding: '8px 12px', borderRadius: 6, border: '1px solid #d1d5db', boxSizing: 'border-box' }}
             />
           </div>
