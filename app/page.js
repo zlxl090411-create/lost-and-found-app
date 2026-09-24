@@ -107,9 +107,14 @@ export default function StudentPage() {
         </div>
       </div>
 
-      <div className="hero-banner">
+            <div className="hero-banner">
         <img src="/school-building.jpg" alt="봉일천고등학교 전경" />
-        <div className="hero-text">잃어버린 물건, 여기서 찾아보세요</div>
+        <div className="hero-text">
+          <div style={{ fontSize: 11, letterSpacing: 1, opacity: 0.85, marginBottom: 2 }}>
+            made in MAKERS (SDY)
+          </div>
+          잃어버린 물건, 여기서 찾아보세요
+        </div>
       </div>
 
       <div className="container">
