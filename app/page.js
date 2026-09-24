@@ -107,7 +107,43 @@ export default function StudentPage() {
         </div>
       </div>
 
-                 <div className="hero-banner">
+    <div style={{
+        position: 'relative',
+        width: '100%',
+        height: '220px',
+        borderRadius: '12px',
+        overflow: 'hidden',
+        backgroundColor: '#1f2937',
+        marginBottom: '24px',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        textAlign: 'center'
+      }}>
+        <img 
+          src="/school-building.jpg" 
+          alt="봉일천고등학교 전경" 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            opacity: 0.7,
+            zIndex: 1
+          }} 
+        />
+        <div style={{ position: 'relative', zIndex: 2, color: 'white', padding: '0 16px' }}>
+          <div style={{ fontSize: 12, letterSpacing: '1.5px', opacity: 0.9, marginBottom: 6, fontWeight: '600' }}>
+            MADE IN MAKERS (SDY)
+          </div>
+          <div style={{ fontSize: 24, fontWeight: 'bold', textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+            잃어버린 물건, 여기서 찾아보세요
+          </div>
+        </div>
+      </div>
         <img src="/school-building.jpg" alt="봉일천고등학교 전경" />
         <div className="hero-text">
           <div style={{ fontSize: 11, letterSpacing: 1, opacity: 0.85, marginBottom: 2 }}>
