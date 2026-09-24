@@ -71,7 +71,7 @@ export default function StudentHome() {
 
       <div className="container">
         {notices.length > 0 && (
-          <div className="notice-box" style={{ marginBottom: 24, background: '#f8fafc', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0' }}>
+          <div style={{ marginBottom: 24, background: '#f8fafc', padding: 16, borderRadius: 12, border: '1px solid #e2e8f0' }}>
             <h3 style={{ fontSize: 15, marginBottom: 8, color: '#1e293b' }}>📢 공지사항</h3>
             {notices.map((n) => (
               <p key={n.id} style={{ fontSize: 14, color: '#475569', whiteSpace: 'pre-wrap', margin: 0 }}>
