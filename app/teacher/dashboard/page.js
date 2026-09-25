@@ -21,6 +21,12 @@ export default function TeacherDashboard() {
   const [schoolInfo, setSchoolInfo] = useState('');
   const [infoMessage, setInfoMessage] = useState('');
 
+  const [editingItemId, setEditingItemId] = useState(null);
+  const [editForm, setEditForm] = useState({ title: '', description: '', location: '' });
+  const [editPhotoFile, setEditPhotoFile] = useState(null);
+  const [editSubmitting, setEditSubmitting] = useState(false);
+  const [editMessage, setEditMessage] = useState('');
+
   const loadItems = async () => {
     const { data } = await supabase
       .from('lost_items')
@@ -141,6 +147,62 @@ export default function TeacherDashboard() {
     await supabase.from('lost_items').delete().eq('id', id);
   }
 
+  function startEditItem(item) {
+    setEditingItemId(item.id);
+    setEditForm({ title: item.title, description: item.description || '', location: item.location });
+    setEditPhotoFile(null);
+    setEditMessage('');
+  }
+
+  function cancelEditItem() {
+    setEditingItemId(null);
+    setEditPhotoFile(null);
+    setEditMessage('');
+  }
+
+  async function handleEditSubmit(e, itemId, currentPhotoUrl) {
+    e.preventDefault();
+    setEditSubmitting(true);
+    setEditMessage('');
+
+    let photo_url = currentPhotoUrl;
+    if (editPhotoFile) {
+      const safeName = editPhotoFile.name.replace(/[^a-zA-Z0-9.]/g, '_');
+      const fileName = `${Date.now()}_${safeName}`;
+      const { error: uploadError } = await supabase.storage
+        .from('lost-item-photos')
+        .upload(fileName, editPhotoFile);
+      if (uploadError) {
+        setEditMessage('사진 업로드 실패: ' + uploadError.message);
+        setEditSubmitting(false);
+        return;
+      }
+      const { data: urlData } = supabase.storage.from('lost-item-photos').getPublicUrl(fileName);
+      photo_url = urlData.publicUrl;
+    }
+
+    const { error } = await supabase
+      .from('lost_items')
+      .update({
+        title: editForm.title,
+        description: editForm.description,
+        location: editForm.location,
+        photo_url,
+      })
+      .eq('id', itemId);
+
+    if (error) {
+      setEditMessage('수정 실패: ' + error.message);
+      setEditSubmitting(false);
+      return;
+    }
+
+    setEditSubmitting(false);
+    setEditingItemId(null);
+    setEditPhotoFile(null);
+    loadItems();
+  }
+
   async function handleNoticeSubmit(e) {
     e.preventDefault();
     setNoticeMessage('');
@@ -211,17 +273,89 @@ export default function TeacherDashboard() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-    const filteredItems = items
-    .filter((item) => {
-      const query = searchQuery.toLowerCase().trim();
-      if (!query) return true;
-      const titleMatch = item.title?.toLowerCase().includes(query);
-      const locationMatch = item.location?.toLowerCase().includes(query);
-      const descMatch = item.description?.toLowerCase().includes(query);
-      return titleMatch || locationMatch || descMatch;
-    })
-    .sort((a, b) => (a.status === 'claimed') - (b.status === 'claimed'));
+  const filteredItems = items.filter((item) => {
+    const query = searchQuery.toLowerCase().trim();
+    if (!query) return true;
+    const titleMatch = item.title?.toLowerCase().includes(query);
+    const locationMatch = item.location?.toLowerCase().includes(query);
+    const descMatch = item.description?.toLowerCase().includes(query);
+    return titleMatch || locationMatch || descMatch;
+  });
+
+  const unclaimedItems = filteredItems.filter((item) => item.status !== 'claimed');
+  const claimedItems = filteredItems.filter((item) => item.status === 'claimed');
+
   if (checking) return <p className="empty-text">확인 중...</p>;
+
+  function renderItemCard(item) {
+    if (editingItemId === item.id) {
+      return (
+        <div className="card" key={item.id} style={{ padding: 12 }}>
+          <form onSubmit={(e) => handleEditSubmit(e, item.id, item.photo_url)}>
+            <div className="form-group">
+              <label>제목</label>
+              <input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} required />
+            </div>
+            <div className="form-group">
+              <label>습득 장소</label>
+              <input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} required />
+            </div>
+            <div className="form-group">
+              <label>설명</label>
+              <textarea rows={2} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
+            </div>
+            <div className="form-group">
+              <label>사진 교체 (선택, 안 바꾸면 그대로 유지)</label>
+              <input type="file" accept="image/*" onChange={(e) => setEditPhotoFile(e.target.files[0])} />
+              {item.photo_url && !editPhotoFile && (
+                <img src={item.photo_url} alt="현재 사진" style={{ width: '100%', marginTop: 6, borderRadius: 8 }} />
+              )}
+            </div>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button className="btn btn-sm" type="submit" disabled={editSubmitting}>
+                {editSubmitting ? '저장 중...' : '저장'}
+              </button>
+              <button type="button" className="btn btn-outline btn-sm" onClick={cancelEditItem}>
+                취소
+              </button>
+            </div>
+            {editMessage && <p style={{ fontSize: 13, marginTop: 6 }}>{editMessage}</p>}
+          </form>
+        </div>
+      );
+    }
+
+    return (
+      <div className="card" key={item.id}>
+        {item.photo_url && <img src={item.photo_url} alt={item.title} />}
+        <div className="card-body">
+          <div className="card-title">{item.title}</div>
+          <div className="card-meta">📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}</div>
+          {item.description && <div className="card-desc">{item.description}</div>}
+          <div style={{ marginTop: 6 }}>
+            {item.status === 'claimed' ? (
+              <span className="badge badge-done">주인 찾음</span>
+            ) : (
+              <span className="badge badge-warn">미해결</span>
+            )}
+          </div>
+          <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {item.status !== 'claimed' && (
+              <button className="btn btn-sm" onClick={() => markAsFound(item.id)}>
+                찾았어요 표시
+              </button>
+            )}
+            <button className="btn btn-outline btn-sm" onClick={() => startEditItem(item)}>
+              수정
+            </button>
+            <button className="btn btn-outline btn-sm" onClick={() => deleteItem(item.id)}>
+              삭제
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -291,32 +425,8 @@ export default function TeacherDashboard() {
           </p>
         ) : (
           <div className="grid" style={{ marginTop: 16 }}>
-            {filteredItems.map((item) => (
-              <div className="card" key={item.id}>
-                {item.photo_url && <img src={item.photo_url} alt={item.title} />}
-                <div className="card-body">
-                  <div className="card-title">{item.title}</div>
-                  <div className="card-meta">📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}</div>
-                  <div style={{ marginTop: 6 }}>
-                    {item.status === 'claimed' ? (
-                      <span className="badge badge-done">주인 찾음</span>
-                    ) : (
-                      <span className="badge badge-warn">미해결</span>
-                    )}
-                  </div>
-                  <div style={{ marginTop: 10, display: 'flex', gap: 6 }}>
-                    {item.status !== 'claimed' && (
-                      <button className="btn btn-sm" onClick={() => markAsFound(item.id)}>
-                        찾았어요 표시
-                      </button>
-                    )}
-                    <button className="btn btn-outline btn-sm" onClick={() => deleteItem(item.id)}>
-                      삭제
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+            {unclaimedItems.map(renderItemCard)}
+            {claimedItems.map(renderItemCard)}
           </div>
         )}
 
