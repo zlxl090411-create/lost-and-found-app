@@ -84,16 +84,17 @@ export default function StudentPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  const filteredItems = items.filter((item) => {
-    const term = searchTerm.trim().toLowerCase();
-    if (!term) return true;
-    return (
-      item.title?.toLowerCase().includes(term) ||
-      item.location?.toLowerCase().includes(term) ||
-      item.description?.toLowerCase().includes(term)
-    );
-  });
-
+    const filteredItems = items
+    .filter((item) => {
+      const term = searchTerm.trim().toLowerCase();
+      if (!term) return true;
+      return (
+        item.title?.toLowerCase().includes(term) ||
+        item.location?.toLowerCase().includes(term) ||
+        item.description?.toLowerCase().includes(term)
+      );
+    })
+    .sort((a, b) => (a.status === 'claimed') - (b.status === 'claimed'));
   return (
     <div>
       <div className="header">
