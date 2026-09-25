@@ -94,6 +94,7 @@ export default function StudentPage() {
         item.description?.toLowerCase().includes(term)
       );
     })
+ㄴems = filteredItems.filter((item) => item.status === 'claimed');
     .sort((a, b) => (a.status === 'claimed') - (b.status === 'claimed'));
   return (
     <div>
@@ -159,28 +160,57 @@ export default function StudentPage() {
           />
         </div>
 
-        {loading ? (
+               {loading ? (
           <p className="empty-text">불러오는 중...</p>
         ) : filteredItems.length === 0 ? (
           <p className="empty-text">{searchTerm ? '검색 결과가 없습니다.' : '등록된 분실물이 없습니다.'}</p>
         ) : (
-          <div className="grid">
-            {filteredItems.map((item) => (
-              <div className="card" key={item.id} onClick={() => setSelectedItem(item)}>
-                {item.photo_url && <img src={item.photo_url} alt={item.title} />}
-                <div className="card-body">
-                  <div className="card-title">{item.title}</div>
-                  <div className="card-meta">
-                    📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}
+          <>
+            {unclaimedItems.length === 0 ? (
+              <p className="empty-text">미해결 분실물이 없습니다.</p>
+            ) : (
+              <div className="grid">
+                {unclaimedItems.map((item) => (
+                  <div className="card" key={item.id} onClick={() => setSelectedItem(item)}>
+                    {item.photo_url && <img src={item.photo_url} alt={item.title} />}
+                    <div className="card-body">
+                      <div className="card-title">{item.title}</div>
+                      <div className="card-meta">
+                        📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}
+                      </div>
+                      {item.description && <div className="card-desc">{item.description}</div>}
+                      <div style={{ marginTop: 6 }}>
+                        <DdayBadge status={item.status} foundDate={item.found_date} />
+                      </div>
+                    </div>
                   </div>
-                  {item.description && <div className="card-desc">{item.description}</div>}
-                  <div style={{ marginTop: 6 }}>
-                    <DdayBadge status={item.status} foundDate={item.found_date} />
-                  </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+
+            {claimedItems.length > 0 && (
+              <>
+                <h2 style={{ fontSize: 16, marginTop: 28 }}>주인 찾은 분실물</h2>
+                <div className="grid">
+                  {claimedItems.map((item) => (
+                    <div className="card" key={item.id} onClick={() => setSelectedItem(item)} style={{ opacity: 0.7 }}>
+                      {item.photo_url && <img src={item.photo_url} alt={item.title} />}
+                      <div className="card-body">
+                        <div className="card-title">{item.title}</div>
+                        <div className="card-meta">
+                          📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}
+                        </div>
+                        {item.description && <div className="card-desc">{item.description}</div>}
+                        <div style={{ marginTop: 6 }}>
+                          <DdayBadge status={item.status} foundDate={item.found_date} />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
         )}
       </div>
 
