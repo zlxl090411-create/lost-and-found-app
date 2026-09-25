@@ -211,15 +211,16 @@ export default function TeacherDashboard() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-  const filteredItems = items.filter((item) => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return true;
-    const titleMatch = item.title?.toLowerCase().includes(query);
-    const locationMatch = item.location?.toLowerCase().includes(query);
-    const descMatch = item.description?.toLowerCase().includes(query);
-    return titleMatch || locationMatch || descMatch;
-  });
-
+    const filteredItems = items
+    .filter((item) => {
+      const query = searchQuery.toLowerCase().trim();
+      if (!query) return true;
+      const titleMatch = item.title?.toLowerCase().includes(query);
+      const locationMatch = item.location?.toLowerCase().includes(query);
+      const descMatch = item.description?.toLowerCase().includes(query);
+      return titleMatch || locationMatch || descMatch;
+    })
+    .sort((a, b) => (a.status === 'claimed') - (b.status === 'claimed'));
   if (checking) return <p className="empty-text">확인 중...</p>;
 
   return (
