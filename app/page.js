@@ -84,18 +84,19 @@ export default function StudentPage() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
-    const filteredItems = items
-    .filter((item) => {
-      const term = searchTerm.trim().toLowerCase();
-      if (!term) return true;
-      return (
-        item.title?.toLowerCase().includes(term) ||
-        item.location?.toLowerCase().includes(term) ||
-        item.description?.toLowerCase().includes(term)
-      );
-    })
-ㄴems = filteredItems.filter((item) => item.status === 'claimed');
-    .sort((a, b) => (a.status === 'claimed') - (b.status === 'claimed'));
+  const filteredItems = items.filter((item) => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return true;
+    return (
+      item.title?.toLowerCase().includes(term) ||
+      item.location?.toLowerCase().includes(term) ||
+      item.description?.toLowerCase().includes(term)
+    );
+  });
+
+  const unclaimedItems = filteredItems.filter((item) => item.status !== 'claimed');
+  const claimedItems = filteredItems.filter((item) => item.status === 'claimed');
+
   return (
     <div>
       <div className="header">
@@ -160,7 +161,7 @@ export default function StudentPage() {
           />
         </div>
 
-               {loading ? (
+        {loading ? (
           <p className="empty-text">불러오는 중...</p>
         ) : filteredItems.length === 0 ? (
           <p className="empty-text">{searchTerm ? '검색 결과가 없습니다.' : '등록된 분실물이 없습니다.'}</p>
