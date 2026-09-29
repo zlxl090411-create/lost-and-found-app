@@ -142,6 +142,11 @@ export default function TeacherDashboard() {
     await supabase.from('lost_items').update({ status: 'claimed', updated_at: new Date().toISOString() }).eq('id', id);
   }
 
+  async function unmarkFound(id) {
+    if (!confirm('찾음 처리를 취소하고 다시 미해결 상태로 되돌릴까요?')) return;
+    await supabase.from('lost_items').update({ status: 'unclaimed', updated_at: new Date().toISOString() }).eq('id', id);
+  }
+
   async function deleteItem(id) {
     if (!confirm('이 분실물을 삭제할까요?')) return;
     await supabase.from('lost_items').delete().eq('id', id);
@@ -297,12 +302,12 @@ export default function TeacherDashboard() {
               <input value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} required />
             </div>
             <div className="form-group">
-              <label>습득 장소</label>
+              <label>분실물 습득 위치</label>
               <input value={editForm.location} onChange={(e) => setEditForm({ ...editForm, location: e.target.value })} required />
             </div>
             <div className="form-group">
-              <label>설명</label>
-              <textarea rows={2} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
+              <label>보관 장소 안내</label>
+              <textarea rows={2} placeholder="예: 4층 안전생활부 박윤경 선생님께 문의" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
             </div>
             <div className="form-group">
               <label>사진 교체 (선택, 안 바꾸면 그대로 유지)</label>
@@ -331,7 +336,7 @@ export default function TeacherDashboard() {
         <div className="card-body">
           <div className="card-title">{item.title}</div>
           <div className="card-meta">📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}</div>
-          {item.description && <div className="card-desc">{item.description}</div>}
+          {item.description && <div className="card-desc">🗄 보관장소: {item.description}</div>}
           <div style={{ marginTop: 6 }}>
             {item.status === 'claimed' ? (
               <span className="badge badge-done">주인 찾음</span>
@@ -340,9 +345,13 @@ export default function TeacherDashboard() {
             )}
           </div>
           <div style={{ marginTop: 10, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {item.status !== 'claimed' && (
+            {item.status !== 'claimed' ? (
               <button className="btn btn-sm" onClick={() => markAsFound(item.id)}>
                 찾았어요 표시
+              </button>
+            ) : (
+              <button className="btn btn-outline btn-sm" onClick={() => unmarkFound(item.id)}>
+                찾음 취소
               </button>
             )}
             <button className="btn btn-outline btn-sm" onClick={() => startEditItem(item)}>
@@ -383,12 +392,12 @@ export default function TeacherDashboard() {
             <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
           </div>
           <div className="form-group">
-            <label>습득 장소</label>
+            <label>분실물 습득 위치</label>
             <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })} required />
           </div>
           <div className="form-group">
-            <label>설명</label>
-            <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <label>보관 장소 안내</label>
+            <textarea rows={3} placeholder="예: 4층 안전생활부 박윤경 선생님께 문의" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div className="form-group">
             <label>사진 (선택)</label>
@@ -431,69 +440,4 @@ export default function TeacherDashboard() {
         )}
 
         <div style={{ marginTop: '40px', borderTop: '2px solid #e5e8ef', paddingTop: '24px' }}>
-          <h2 style={{ fontSize: 18, marginBottom: '16px' }}>⚙️ 학교 정보 및 공지사항 관리</h2>
-
-          <div style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e5e8ef', marginBottom: '20px' }}>
-            <h3 style={{ fontSize: 15, marginBottom: '12px' }}>공지사항 {editingNoticeId ? '수정' : '등록'}</h3>
-            <form onSubmit={handleNoticeSubmit}>
-              <div className="form-group">
-                <label>제목</label>
-                <input
-                  value={noticeForm.title}
-                  onChange={(e) => setNoticeForm({ ...noticeForm, title: e.target.value })}
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label>내용</label>
-                <textarea
-                  rows={3}
-                  value={noticeForm.content}
-                  onChange={(e) => setNoticeForm({ ...noticeForm, content: e.target.value })}
-                  required
-                />
-              </div>
-              <button className="btn btn-sm" type="submit">{editingNoticeId ? '수정 완료' : '등록하기'}</button>
-              {editingNoticeId && (
-                <button
-                  type="button"
-                  className="btn btn-outline btn-sm"
-                  style={{ marginLeft: 8 }}
-                  onClick={() => { setEditingNoticeId(null); setNoticeForm({ title: '', content: '' }); }}
-                >
-                  취소
-                </button>
-              )}
-              {noticeMessage && <p style={{ fontSize: 13, marginTop: 8, color: '#2563eb' }}>{noticeMessage}</p>}
-            </form>
-
-            <div style={{ marginTop: 14 }}>
-              {notices.map((n) => (
-                <div key={n.id} style={{ border: '1px solid #e5e8ef', borderRadius: 10, padding: 12, marginBottom: 8 }}>
-                  <strong>{n.title}</strong>
-                  <p style={{ fontSize: 13, margin: '4px 0' }}>{n.content}</p>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button className="btn btn-outline btn-sm" onClick={() => startEditNotice(n)}>수정</button>
-                    <button className="btn btn-danger btn-sm" onClick={() => deleteNotice(n.id)}>삭제</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e5e8ef' }}>
-            <h3 style={{ fontSize: 15, marginBottom: '12px' }}>학교 정보 수정</h3>
-            <textarea
-              rows={5}
-              value={schoolInfo}
-              onChange={(e) => setSchoolInfo(e.target.value)}
-              style={{ width: '100%', padding: 10, border: '1px solid #e5e8ef', borderRadius: 8, fontFamily: 'inherit', fontSize: 14 }}
-            />
-            <button className="btn btn-sm" style={{ marginTop: 10 }} onClick={saveSchoolInfo}>저장</button>
-            {infoMessage && <span style={{ marginLeft: 10, fontSize: 13, color: '#2563eb' }}>{infoMessage}</span>}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+          <h2 style={{ fontSize: 18, marginBottom: '16px'
