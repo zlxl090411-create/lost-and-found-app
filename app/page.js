@@ -177,9 +177,9 @@ export default function StudentPage() {
                     <div className="card-body">
                       <div className="card-title">{item.title}</div>
                       <div className="card-meta">
-                        📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}
+                        📍 습득 위치: {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}
                       </div>
-                      {item.description && <div className="card-desc">{item.description}</div>}
+                      {item.description && <div className="card-desc">🗄 보관장소: {item.description}</div>}
                       <div style={{ marginTop: 6 }}>
                         <DdayBadge status={item.status} foundDate={item.found_date} />
                       </div>
@@ -199,9 +199,9 @@ export default function StudentPage() {
                       <div className="card-body">
                         <div className="card-title">{item.title}</div>
                         <div className="card-meta">
-                          📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}
+                          📍 습득 위치: {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}
                         </div>
-                        {item.description && <div className="card-desc">{item.description}</div>}
+                        {item.description && <div className="card-desc">🗄 보관장소: {item.description}</div>}
                         <div style={{ marginTop: 6 }}>
                           <DdayBadge status={item.status} foundDate={item.found_date} />
                         </div>
@@ -223,10 +223,10 @@ export default function StudentPage() {
             <div className="modal-body">
               <h2 style={{ margin: '0 0 8px', fontSize: 18 }}>{selectedItem.title}</h2>
               <div className="card-meta">
-                📍 {selectedItem.location} · 등록일 {formatDate(selectedItem.created_at || selectedItem.found_date)}
+                📍 습득 위치: {selectedItem.location} · 등록일 {formatDate(selectedItem.created_at || selectedItem.found_date)}
               </div>
               {selectedItem.description && (
-                <p style={{ fontSize: 14, marginTop: 10, whiteSpace: 'pre-wrap' }}>{selectedItem.description}</p>
+                <p style={{ fontSize: 14, marginTop: 10, whiteSpace: 'pre-wrap' }}>🗄 보관장소: {selectedItem.description}</p>
               )}
               <div style={{ marginTop: 12 }}>
                 <DdayBadge status={selectedItem.status} foundDate={selectedItem.found_date} />
