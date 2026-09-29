@@ -410,7 +410,7 @@ export default function TeacherDashboard() {
         </form>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 28, flexWrap: 'wrap', gap: 12 }}>
-          <h2 style={{ fontSize: 16, margin: 0 }}>등록한 분실물 목록</h2>
+          <h2 style={{ fontSize: 16, margin: 0 }}>습득된 분실물 목록</h2>
           <input
             type="text"
             placeholder="제목, 장소, 설명으로 검색..."
@@ -433,10 +433,24 @@ export default function TeacherDashboard() {
             {searchQuery ? '검색 결과에 해당하는 분실물이 없습니다.' : '등록된 분실물이 없습니다.'}
           </p>
         ) : (
-          <div className="grid" style={{ marginTop: 16 }}>
-            {unclaimedItems.map(renderItemCard)}
-            {claimedItems.map(renderItemCard)}
-          </div>
+          <>
+            {unclaimedItems.length === 0 ? (
+              <p className="empty-text" style={{ marginTop: 16 }}>미해결 분실물이 없습니다.</p>
+            ) : (
+              <div className="grid" style={{ marginTop: 16 }}>
+                {unclaimedItems.map(renderItemCard)}
+              </div>
+            )}
+
+            {claimedItems.length > 0 && (
+              <>
+                <h2 style={{ fontSize: 16, marginTop: 28 }}>주인 찾은 분실물</h2>
+                <div className="grid" style={{ marginTop: 16 }}>
+                  {claimedItems.map(renderItemCard)}
+                </div>
+              </>
+            )}
+          </>
         )}
 
         <div style={{ marginTop: '40px', borderTop: '2px solid #e5e8ef', paddingTop: '24px' }}>
