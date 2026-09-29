@@ -335,7 +335,7 @@ export default function TeacherDashboard() {
         {item.photo_url && <img src={item.photo_url} alt={item.title} />}
         <div className="card-body">
           <div className="card-title">{item.title}</div>
-          <div className="card-meta">📍 {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}</div>
+          <div className="card-meta">📍 습득 위치: {item.location} · 등록일 {formatDate(item.created_at || item.found_date)}</div>
           {item.description && <div className="card-desc">🗄 보관장소: {item.description}</div>}
           <div style={{ marginTop: 6 }}>
             {item.status === 'claimed' ? (
