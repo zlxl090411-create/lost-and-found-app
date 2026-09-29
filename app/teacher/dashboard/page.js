@@ -307,7 +307,7 @@ export default function TeacherDashboard() {
             </div>
             <div className="form-group">
               <label>보관 장소 안내</label>
-              <textarea rows={2} placeholder="예: 4층 안전생활부 박윤경 선생님께 문의" value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
+              <textarea rows={2} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} />
             </div>
             <div className="form-group">
               <label>사진 교체 (선택, 안 바꾸면 그대로 유지)</label>
@@ -397,7 +397,7 @@ export default function TeacherDashboard() {
           </div>
           <div className="form-group">
             <label>보관 장소 안내</label>
-            <textarea rows={3} placeholder="예: 4층 안전생활부 박윤경 선생님께 문의" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+            <textarea rows={3} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           </div>
           <div className="form-group">
             <label>사진 (선택)</label>
