@@ -440,4 +440,69 @@ export default function TeacherDashboard() {
         )}
 
         <div style={{ marginTop: '40px', borderTop: '2px solid #e5e8ef', paddingTop: '24px' }}>
-          <h2 style={{ fontSize: 18, marginBottom: '16px'
+          <h2 style={{ fontSize: 18, marginBottom: '16px' }}>⚙️ 학교 정보 및 공지사항 관리</h2>
+
+          <div style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e5e8ef', marginBottom: '20px' }}>
+            <h3 style={{ fontSize: 15, marginBottom: '12px' }}>공지사항 {editingNoticeId ? '수정' : '등록'}</h3>
+            <form onSubmit={handleNoticeSubmit}>
+              <div className="form-group">
+                <label>제목</label>
+                <input
+                  value={noticeForm.title}
+                  onChange={(e) => setNoticeForm({ ...noticeForm, title: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>내용</label>
+                <textarea
+                  rows={3}
+                  value={noticeForm.content}
+                  onChange={(e) => setNoticeForm({ ...noticeForm, content: e.target.value })}
+                  required
+                />
+              </div>
+              <button className="btn btn-sm" type="submit">{editingNoticeId ? '수정 완료' : '등록하기'}</button>
+              {editingNoticeId && (
+                <button
+                  type="button"
+                  className="btn btn-outline btn-sm"
+                  style={{ marginLeft: 8 }}
+                  onClick={() => { setEditingNoticeId(null); setNoticeForm({ title: '', content: '' }); }}
+                >
+                  취소
+                </button>
+              )}
+              {noticeMessage && <p style={{ fontSize: 13, marginTop: 8, color: '#2563eb' }}>{noticeMessage}</p>}
+            </form>
+
+            <div style={{ marginTop: 14 }}>
+              {notices.map((n) => (
+                <div key={n.id} style={{ border: '1px solid #e5e8ef', borderRadius: 10, padding: 12, marginBottom: 8 }}>
+                  <strong>{n.title}</strong>
+                  <p style={{ fontSize: 13, margin: '4px 0' }}>{n.content}</p>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <button className="btn btn-outline btn-sm" onClick={() => startEditNotice(n)}>수정</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => deleteNotice(n.id)}>삭제</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ background: 'white', padding: 16, borderRadius: 12, border: '1px solid #e5e8ef' }}>
+            <h3 style={{ fontSize: 15, marginBottom: '12px' }}>학교 정보 수정</h3>
+            <textarea
+              rows={5}
+              value={schoolInfo}
+              onChange={(e) => setSchoolInfo(e.target.value)}
+              style={{ width: '100%', padding: 10, border: '1px solid #e5e8ef', borderRadius: 8, fontFamily: 'inherit', fontSize: 14 }}
+            />
+            <button className="btn btn-sm" style={{ marginTop: 10 }} onClick={saveSchoolInfo}>저장</button>
+            {infoMessage && <span style={{ marginLeft: 10, fontSize: 13, color: '#2563eb' }}>{infoMessage}</span>}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
